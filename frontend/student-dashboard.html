@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>Student Dashboard</h2>
+    <input type="text" id="sessionCode" placeholder="Enter Session Code" />
+    <button onclick="markAttendance()">Mark Attendance</button>
+    <h3>Your Attendance Records</h3>
+    <ul id="recordsList"></ul>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <script>
+    async function markAttendance() {
+      const code = document.getElementById('sessionCode').value;
+      const res = await fetch('http://localhost:3000/api/mark-attendance', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify({ sessionCode: code })
+      });
+
+      const data = await res.json();
+      alert(data.message);
+      loadRecords();
+    }
+
+    async function loadRecords() {
+      const res = await fetch('http://localhost:3000/api/attendance', {
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+      });
+      const data = await res.json();
+      const list = document.getElementById('recordsList');
+      list.innerHTML = '';
+      data.forEach(row => {
+        const item = document.createElement('li');
+        item.textContent = `Code: ${row.code}, Marked: ${row.marked_at}`;
+        list.appendChild(item);
+      });
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = 'index.html';
+    }
+
+    window.onload = loadRecords;
+  </script>
+</body>
+</html>
