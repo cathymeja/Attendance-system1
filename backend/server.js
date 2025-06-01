@@ -1,22 +1,27 @@
 const express = require('express');
 const cors = require('cors');
-const path = require('path'); // <-- Added
+const path = require('path');
 const bodyParser = require('body-parser');
 const mysql = require('mysql2');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const SECRET_KEY = 'secret123';
 
 app.use(cors());
 app.use(bodyParser.json());
 
-// Serve static frontend files from "public" folder
+// ✅ Serve static files from frontend folder
 app.use(express.static(path.join(__dirname, 'frontend')));
 
-// MySQL connection
+// ✅ Serve index.html on root
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+});
+
+// ✅ MySQL connection
 const db = mysql.createConnection({
   host: 'sql7.freesqldatabase.com',
   user: 'sql7782505',
@@ -29,7 +34,7 @@ db.connect(err => {
   console.log('MySQL Connected');
 });
 
-// JWT authentication middleware
+// ✅ JWT middleware
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -43,7 +48,7 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// Register user
+// ✅ Register
 app.post('/api/register', (req, res) => {
   const { username, password, role } = req.body;
   const hashedPassword = bcrypt.hashSync(password, 10);
@@ -51,14 +56,14 @@ app.post('/api/register', (req, res) => {
   db.query(
     'INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
     [username, hashedPassword, role],
-    (err, result) => {
+    (err) => {
       if (err) return res.status(500).json({ error: err });
       res.json({ message: 'User registered' });
     }
   );
 });
 
-// Login user
+// ✅ Login
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
 
@@ -81,7 +86,7 @@ app.post('/api/login', (req, res) => {
   );
 });
 
-// Lecturer creates class session code
+// ✅ Lecturer creates class session
 app.post('/api/create-session', authenticateToken, (req, res) => {
   if (req.user.role !== 'lecturer') return res.status(403).json({ error: 'Not allowed' });
 
@@ -90,14 +95,14 @@ app.post('/api/create-session', authenticateToken, (req, res) => {
   db.query(
     'INSERT INTO class_sessions (code, created_by) VALUES (?, ?)',
     [code, req.user.id],
-    (err, result) => {
+    (err) => {
       if (err) return res.status(500).json({ error: err });
       res.json({ message: 'Session created', code });
     }
   );
 });
 
-// Student marks attendance
+// ✅ Student marks attendance
 app.post('/api/mark-attendance', authenticateToken, (req, res) => {
   if (req.user.role !== 'student') return res.status(403).json({ error: 'Not allowed' });
 
@@ -112,21 +117,19 @@ app.post('/api/mark-attendance', authenticateToken, (req, res) => {
 
       const sessionId = results[0].id;
 
-      // Check if attendance already marked
       db.query(
         'SELECT * FROM attendance WHERE student_id = ? AND session_id = ?',
         [req.user.id, sessionId],
         (err2, results2) => {
           if (err2) return res.status(500).json({ error: err2 });
           if (results2.length > 0) {
-            return res.status(400).json({ error: 'Attendance already marked for this session' });
+            return res.status(400).json({ error: 'Attendance already marked' });
           }
 
-          // Insert attendance record
           db.query(
             'INSERT INTO attendance (student_id, session_id) VALUES (?, ?)',
             [req.user.id, sessionId],
-            (err3, result) => {
+            (err3) => {
               if (err3) return res.status(500).json({ error: err3 });
               res.json({ message: 'Attendance marked' });
             }
@@ -137,7 +140,7 @@ app.post('/api/mark-attendance', authenticateToken, (req, res) => {
   );
 });
 
-// Student views attendance records
+// ✅ Student views attendance
 app.get('/api/attendance', authenticateToken, (req, res) => {
   if (req.user.role !== 'student') return res.status(403).json({ error: 'Not allowed' });
 
@@ -153,13 +156,13 @@ app.get('/api/attendance', authenticateToken, (req, res) => {
     }
   );
 });
-// Lecturer views attendance for a specific session
+
+// ✅ Lecturer views session attendance
 app.get('/api/session-attendance/:sessionCode', authenticateToken, (req, res) => {
   if (req.user.role !== 'lecturer') return res.status(403).json({ error: 'Not allowed' });
 
   const sessionCode = req.params.sessionCode;
 
-  // Check if session belongs to this lecturer
   db.query(
     'SELECT id FROM class_sessions WHERE code = ? AND created_by = ?',
     [sessionCode, req.user.id],
@@ -169,7 +172,6 @@ app.get('/api/session-attendance/:sessionCode', authenticateToken, (req, res) =>
 
       const sessionId = results[0].id;
 
-      // Get attendance records for this session
       db.query(
         `SELECT u.username, a.marked_at 
          FROM attendance a
@@ -184,6 +186,8 @@ app.get('/api/session-attendance/:sessionCode', authenticateToken, (req, res) =>
     }
   );
 });
+
+// ✅ Start server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
