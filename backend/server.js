@@ -14,7 +14,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Serve static frontend files from "public" folder
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'frontend')));
 
 // MySQL connection
 const db = mysql.createConnection({
