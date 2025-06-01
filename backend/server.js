@@ -18,7 +18,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // MySQL connection
 const db = mysql.createConnection({
-  host: 'sql7freesqldatabase.com',
+  host: 'sql7.freesqldatabase.com',
   user: 'sql7782505',
   password: 'T4myggMb9h',
   database: 'sql7782505'
