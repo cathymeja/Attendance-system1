@@ -4,6 +4,56 @@
   <meta charset="UTF-8" />
   <title>Login - Class Attendance</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 400px;
+      margin: 60px auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    input, button {
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    p {
+      text-align: center;
+    }
+    a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -19,8 +69,14 @@
   <script>
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      if (!username || !password) {
+        alert('Please enter both username and password.');
+        return;
+      }
 
       try {
         const res = await fetch('/api/login', {
@@ -35,11 +91,13 @@
           localStorage.setItem('token', data.token);
           if (data.role === 'student') {
             window.location.href = 'student-dashboard.html';
-          } else {
+          } else if (data.role === 'lecturer') {
             window.location.href = 'lecturer-dashboard.html';
+          } else {
+            alert('Unknown user role.');
           }
         } else {
-          alert(data.error || 'Login failed');
+          alert(typeof data.error === 'string' ? data.error : 'Login failed.');
         }
       } catch (err) {
         alert('Error connecting to server. Please try again.');
