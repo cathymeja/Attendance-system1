@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Register - Class Attendance</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -27,15 +27,24 @@
       const password = document.getElementById('password').value;
       const role = document.getElementById('role').value;
 
-      const res = await fetch('http://localhost:3000/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, role })
-      });
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, role })
+        });
 
-      const data = await res.json();
-      alert(data.message);
-      if (res.ok) window.location.href = 'login.html';
+        const data = await res.json();
+        if (res.ok) {
+          alert(data.message || 'Registered successfully');
+          window.location.href = 'login.html';
+        } else {
+          alert(data.error || 'Registration failed');
+        }
+      } catch (err) {
+        alert('Error connecting to server. Please try again.');
+        console.error(err);
+      }
     });
   </script>
 </body>
