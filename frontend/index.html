@@ -5,12 +5,12 @@
   <title>Home - Class Attendance System</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    /* Optional inline styles for button container layout */
     .buttons {
       margin-top: 20px;
       display: flex;
       gap: 15px;
       flex-wrap: wrap;
+      justify-content: center;
     }
     .btn {
       display: inline-block;
@@ -25,6 +25,20 @@
     .btn:hover {
       background-color: #0056b3;
     }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 700px;
+      margin: 50px auto;
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
   </style>
 </head>
 <body>
@@ -32,8 +46,8 @@
     <h1>Welcome to the Class Attendance System</h1>
     <p>This simple website allows:</p>
     <ul>
-      <li><strong>Lecturers</strong> to create session codes and mark attendance.</li>
-      <li><strong>Students</strong> to mark their attendance and view attendance history.</li>
+      <li><strong>Lecturers</strong> to create session codes and view attendance records.</li>
+      <li><strong>Students</strong> to mark their attendance and view their history.</li>
     </ul>
     <p>Please login or register to begin:</p>
     <div class="buttons">
