@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Lecturer Dashboard</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -25,16 +25,22 @@
 
   <script>
     async function createSession() {
-      const res = await fetch('http://localhost:3000/api/create-session', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
-      });
+      try {
+        const res = await fetch('/api/create-session', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+        });
 
-      const data = await res.json();
-      if (data.code) {
-        document.getElementById('codeDisplay').innerText = `Session Code: ${data.code}`;
-      } else {
-        alert('Failed to create session');
+        const data = await res.json();
+
+        if (res.ok && data.code) {
+          document.getElementById('codeDisplay').innerText = `Session Code: ${data.code}`;
+        } else {
+          alert(data.error || 'Failed to create session');
+        }
+      } catch (error) {
+        alert('Error connecting to server. Please try again.');
+        console.error(error);
       }
     }
 
@@ -45,31 +51,41 @@
         return;
       }
 
-      const res = await fetch(`http://localhost:3000/api/session-attendance/${code}`, {
-        headers: {
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
+      try {
+        const res = await fetch(`/api/session-attendance/${code}`, {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        });
+
+        if (!res.ok) {
+          document.getElementById('attendanceResults').innerHTML = `<p style="color:red;">Could not fetch attendance</p>`;
+          return;
         }
-      });
 
-      if (!res.ok) {
-        document.getElementById('attendanceResults').innerHTML = `<p style="color:red;">Could not fetch attendance</p>`;
-        return;
+        const data = await res.json();
+
+        if (!data.attendance || data.attendance.length === 0) {
+          document.getElementById('attendanceResults').innerHTML = `<p>No attendance found for session ${code}</p>`;
+          return;
+        }
+
+        let html = `<h4>Attendance for Session ${code}</h4>
+                    <table border="1" cellpadding="5" cellspacing="0">
+                      <tr><th>Student Username</th><th>Marked At</th></tr>`;
+
+        data.attendance.forEach(item => {
+          html += `<tr><td>${item.username}</td><td>${new Date(item.marked_at).toLocaleString()}</td></tr>`;
+        });
+
+        html += '</table>';
+
+        document.getElementById('attendanceResults').innerHTML = html;
+
+      } catch (error) {
+        document.getElementById('attendanceResults').innerHTML = `<p style="color:red;">Error fetching attendance data.</p>`;
+        console.error(error);
       }
-
-      const data = await res.json();
-
-      if (!data.attendance || data.attendance.length === 0) {
-        document.getElementById('attendanceResults').innerHTML = `<p>No attendance found for session ${code}</p>`;
-        return;
-      }
-
-      let html = `<h4>Attendance for Session ${code}</h4><table border="1" cellpadding="5"><tr><th>Student Username</th><th>Marked At</th></tr>`;
-      data.attendance.forEach(item => {
-        html += `<tr><td>${item.username}</td><td>${new Date(item.marked_at).toLocaleString()}</td></tr>`;
-      });
-      html += '</table>';
-
-      document.getElementById('attendanceResults').innerHTML = html;
     }
 
     function logout() {
