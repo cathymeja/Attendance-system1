@@ -1,12 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Home - Class Attendance System</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Optional inline styles for button container layout */
+    .buttons {
+      margin-top: 20px;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+    }
+    .btn:hover {
+      background-color: #0056b3;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
+  <main class="container">
     <h1>Welcome to the Class Attendance System</h1>
     <p>This simple website allows:</p>
     <ul>
@@ -15,9 +37,9 @@
     </ul>
     <p>Please login or register to begin:</p>
     <div class="buttons">
-      <a href="login.html" class="btn">Login</a>
-      <a href="register.html" class="btn">Register</a>
+      <a href="login.html" class="btn" role="button">Login</a>
+      <a href="register.html" class="btn" role="button">Register</a>
     </div>
-  </div>
+  </main>
 </body>
 </html>
