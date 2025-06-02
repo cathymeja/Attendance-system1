@@ -4,6 +4,84 @@
   <meta charset="UTF-8" />
   <title>Lecturer Dashboard</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 50px auto;
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2, h3 {
+      text-align: center;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    #codeDisplay {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 18px;
+      color: #007bff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #f8f9fa;
+    }
+
+    .error {
+      color: red;
+    }
+
+    .no-record {
+      text-align: center;
+      margin-top: 10px;
+      color: #555;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -17,18 +95,29 @@
     <h3>View Attendance for a Session</h3>
     <input type="text" id="sessionCodeInput" placeholder="Enter Session Code" />
     <button onclick="viewAttendance()">View Attendance</button>
-    <div id="attendanceResults" style="margin-top: 20px;"></div>
+    <div id="attendanceResults"></div>
 
     <!-- Logout -->
-    <button onclick="logout()" style="margin-top: 30px;">Logout</button>
+    <button onclick="logout()" style="background-color:#dc3545; margin-top: 30px;">Logout</button>
   </div>
 
   <script>
+    function getToken() {
+      return localStorage.getItem('token');
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = 'index.html';
+    }
+
     async function createSession() {
       try {
         const res = await fetch('/api/create-session', {
           method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+          headers: {
+            'Authorization': 'Bearer ' + getToken()
+          }
         });
 
         const data = await res.json();
@@ -36,10 +125,10 @@
         if (res.ok && data.code) {
           document.getElementById('codeDisplay').innerText = `Session Code: ${data.code}`;
         } else {
-          alert(data.error || 'Failed to create session');
+          alert(data.error || 'Failed to create session.');
         }
       } catch (error) {
-        alert('Error connecting to server. Please try again.');
+        alert('Error connecting to server.');
         console.error(error);
       }
     }
@@ -47,51 +136,57 @@
     async function viewAttendance() {
       const code = document.getElementById('sessionCodeInput').value.trim();
       if (!code) {
-        alert('Please enter a session code');
+        alert('Please enter a session code.');
         return;
       }
 
       try {
         const res = await fetch(`/api/session-attendance/${code}`, {
           headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
+            'Authorization': 'Bearer ' + getToken()
           }
         });
 
+        const data = await res.json();
+        const container = document.getElementById('attendanceResults');
+
         if (!res.ok) {
-          document.getElementById('attendanceResults').innerHTML = `<p style="color:red;">Could not fetch attendance</p>`;
+          container.innerHTML = `<p class="error">Failed to fetch attendance for session ${code}</p>`;
           return;
         }
 
-        const data = await res.json();
-
         if (!data.attendance || data.attendance.length === 0) {
-          document.getElementById('attendanceResults').innerHTML = `<p>No attendance found for session ${code}</p>`;
+          container.innerHTML = `<p class="no-record">No attendance found for session ${code}</p>`;
           return;
         }
 
         let html = `<h4>Attendance for Session ${code}</h4>
-                    <table border="1" cellpadding="5" cellspacing="0">
-                      <tr><th>Student Username</th><th>Marked At</th></tr>`;
+          <table>
+            <tr><th>Student Username</th><th>Marked At</th></tr>`;
 
         data.attendance.forEach(item => {
-          html += `<tr><td>${item.username}</td><td>${new Date(item.marked_at).toLocaleString()}</td></tr>`;
+          html += `<tr>
+            <td>${item.username}</td>
+            <td>${new Date(item.marked_at).toLocaleString()}</td>
+          </tr>`;
         });
 
-        html += '</table>';
-
-        document.getElementById('attendanceResults').innerHTML = html;
+        html += `</table>`;
+        container.innerHTML = html;
 
       } catch (error) {
-        document.getElementById('attendanceResults').innerHTML = `<p style="color:red;">Error fetching attendance data.</p>`;
+        document.getElementById('attendanceResults').innerHTML =
+          `<p class="error">Error fetching attendance data.</p>`;
         console.error(error);
       }
     }
 
-    function logout() {
-      localStorage.removeItem('token');
-      window.location.href = 'index.html';
-    }
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!getToken()) {
+        alert('You must be logged in to access this page.');
+        window.location.href = 'login.html';
+      }
+    });
   </script>
 </body>
 </html>
