@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Login - Class Attendance</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -22,22 +22,28 @@
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
 
-      const res = await fetch('http://localhost:3000/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
 
-      const data = await res.json();
-      if (res.ok) {
-        localStorage.setItem('token', data.token);
-        if (data.role === 'student') {
-          window.location.href = 'student-dashboard.html';
+        const data = await res.json();
+
+        if (res.ok) {
+          localStorage.setItem('token', data.token);
+          if (data.role === 'student') {
+            window.location.href = 'student-dashboard.html';
+          } else {
+            window.location.href = 'lecturer-dashboard.html';
+          }
         } else {
-          window.location.href = 'lecturer-dashboard.html';
+          alert(data.error || 'Login failed');
         }
-      } else {
-        alert(data.error);
+      } catch (err) {
+        alert('Error connecting to server. Please try again.');
+        console.error(err);
       }
     });
   </script>
