@@ -4,10 +4,61 @@
   <meta charset="UTF-8" />
   <title>Student Dashboard</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2, h3 {
+      text-align: center;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+    li {
+      background-color: #f1f1f1;
+      margin-bottom: 8px;
+      padding: 10px;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <h2>Student Dashboard</h2>
+    
     <input type="text" id="sessionCode" placeholder="Enter Session Code" />
     <button onclick="markAttendance()">Mark Attendance</button>
 
@@ -18,6 +69,15 @@
   </div>
 
   <script>
+    function getToken() {
+      return localStorage.getItem('token');
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = 'index.html';
+    }
+
     async function markAttendance() {
       const code = document.getElementById('sessionCode').value.trim();
       if (!code) {
@@ -30,7 +90,7 @@
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
+            'Authorization': 'Bearer ' + getToken()
           },
           body: JSON.stringify({ sessionCode: code })
         });
@@ -41,10 +101,10 @@
           loadRecords();
           document.getElementById('sessionCode').value = '';
         } else {
-          alert(data.error || 'Failed to mark attendance.');
+          alert(typeof data.error === 'string' ? data.error : 'Failed to mark attendance.');
         }
       } catch (error) {
-        alert('Error connecting to server. Please try again.');
+        alert('Error connecting to server.');
         console.error(error);
       }
     }
@@ -53,7 +113,7 @@
       try {
         const res = await fetch('/api/attendance', {
           headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
+            'Authorization': 'Bearer ' + getToken()
           }
         });
 
@@ -68,24 +128,26 @@
         if (Array.isArray(data) && data.length > 0) {
           data.forEach(row => {
             const item = document.createElement('li');
-            item.textContent = `Code: ${row.code}, Marked: ${new Date(row.marked_at).toLocaleString()}`;
+            item.textContent = `Code: ${row.code} | Marked at: ${new Date(row.marked_at).toLocaleString()}`;
             list.appendChild(item);
           });
         } else {
           list.innerHTML = '<li>No attendance records found.</li>';
         }
       } catch (error) {
-        alert('Error loading attendance records.');
+        alert('Could not load attendance records.');
         console.error(error);
       }
     }
 
-    function logout() {
-      localStorage.removeItem('token');
-      window.location.href = 'index.html';
-    }
-
-    document.addEventListener('DOMContentLoaded', loadRecords);
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!getToken()) {
+        alert('You must be logged in to access this page.');
+        window.location.href = 'login.html';
+        return;
+      }
+      loadRecords();
+    });
   </script>
 </body>
 </html>
