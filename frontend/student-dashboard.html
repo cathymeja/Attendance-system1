@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Student Dashboard</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -10,40 +10,74 @@
     <h2>Student Dashboard</h2>
     <input type="text" id="sessionCode" placeholder="Enter Session Code" />
     <button onclick="markAttendance()">Mark Attendance</button>
+
     <h3>Your Attendance Records</h3>
     <ul id="recordsList"></ul>
+
     <button onclick="logout()">Logout</button>
   </div>
 
   <script>
     async function markAttendance() {
-      const code = document.getElementById('sessionCode').value;
-      const res = await fetch('http://localhost:3000/api/mark-attendance', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
-        },
-        body: JSON.stringify({ sessionCode: code })
-      });
+      const code = document.getElementById('sessionCode').value.trim();
+      if (!code) {
+        alert('Please enter a session code.');
+        return;
+      }
 
-      const data = await res.json();
-      alert(data.message);
-      loadRecords();
+      try {
+        const res = await fetch('/api/mark-attendance', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          },
+          body: JSON.stringify({ sessionCode: code })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert(data.message || 'Attendance marked successfully!');
+          loadRecords();
+          document.getElementById('sessionCode').value = '';
+        } else {
+          alert(data.error || 'Failed to mark attendance.');
+        }
+      } catch (error) {
+        alert('Error connecting to server. Please try again.');
+        console.error(error);
+      }
     }
 
     async function loadRecords() {
-      const res = await fetch('http://localhost:3000/api/attendance', {
-        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
-      });
-      const data = await res.json();
-      const list = document.getElementById('recordsList');
-      list.innerHTML = '';
-      data.forEach(row => {
-        const item = document.createElement('li');
-        item.textContent = `Code: ${row.code}, Marked: ${row.marked_at}`;
-        list.appendChild(item);
-      });
+      try {
+        const res = await fetch('/api/attendance', {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to load attendance records');
+        }
+
+        const data = await res.json();
+        const list = document.getElementById('recordsList');
+        list.innerHTML = '';
+
+        if (Array.isArray(data) && data.length > 0) {
+          data.forEach(row => {
+            const item = document.createElement('li');
+            item.textContent = `Code: ${row.code}, Marked: ${new Date(row.marked_at).toLocaleString()}`;
+            list.appendChild(item);
+          });
+        } else {
+          list.innerHTML = '<li>No attendance records found.</li>';
+        }
+      } catch (error) {
+        alert('Error loading attendance records.');
+        console.error(error);
+      }
     }
 
     function logout() {
@@ -51,7 +85,7 @@
       window.location.href = 'index.html';
     }
 
-    window.onload = loadRecords;
+    document.addEventListener('DOMContentLoaded', loadRecords);
   </script>
 </body>
 </html>
