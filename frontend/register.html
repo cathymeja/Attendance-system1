@@ -4,6 +4,56 @@
   <meta charset="UTF-8" />
   <title>Register - Class Attendance</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 400px;
+      margin: 60px auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    input, select, button {
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    p {
+      text-align: center;
+    }
+    a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -11,7 +61,8 @@
     <form id="registerForm">
       <input type="text" id="username" placeholder="Username" required />
       <input type="password" id="password" placeholder="Password" required />
-      <select id="role">
+      <select id="role" required>
+        <option value="">Select Role</option>
         <option value="student">Student</option>
         <option value="lecturer">Lecturer</option>
       </select>
@@ -23,9 +74,14 @@
   <script>
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
       const role = document.getElementById('role').value;
+
+      if (!username || !password || !role) {
+        alert('Please fill in all fields.');
+        return;
+      }
 
       try {
         const res = await fetch('/api/register', {
@@ -35,14 +91,16 @@
         });
 
         const data = await res.json();
+
         if (res.ok) {
           alert(data.message || 'Registered successfully');
           window.location.href = 'login.html';
         } else {
-          alert(data.error || 'Registration failed');
+          // Handle error safely
+          alert(typeof data.error === 'string' ? data.error : 'Registration failed.');
         }
       } catch (err) {
-        alert('Error connecting to server. Please try again.');
+        alert('Could not connect to server. Please try again.');
         console.error(err);
       }
     });
